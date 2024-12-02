@@ -54,6 +54,8 @@ Homepage = "https://github.com/AlecThomson/vstack"
 Discussions = "https://github.com/AlecThomson/vstack/discussions"
 Changelog = "https://github.com/AlecThomson/vstack/releases"
 
+[project.scripts]
+vstack-fits = "vstack.main:main"
 
 [tool.hatch]
 version.source = "vcs"

@@ -2,12 +2,22 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import logging
+from collections.abc import Awaitable
 from pathlib import Path
-from typing import Awaitable
 
 from astropy.table import Table, vstack
-from tqdm.asyncio import tqdm
 
+logger = logging.getLogger(__name__)
+logging.captureWarnings(True)
+ch = logging.StreamHandler()
+logger.addHandler(ch)
+logger.setLevel(logging.INFO)
+
+async def read_table(input_path: Path) -> Awaitable[Table]:
+    msg = f"Reading {input_path}"
+    logger.info(msg)
+    return Table.read(input_path)
 
 async def vstack_tables(
         input_paths: list[Path], 
@@ -19,32 +29,33 @@ async def vstack_tables(
         msg = f"{output_path} already exists. Use --overwrite to overwrite the file."
         raise FileExistsError(msg)
 
-    tasks = []
+    coros = []
     for input_path in input_paths:
-        task = asyncio.create_task(
-            asyncio.to_thread(Table.read, input_path)
-        )
-        tasks.append(task)
+        coro = read_table(input_path)
+        coros.append(coro)
 
-    table_list = await tqdm.gather(*tasks)
+    table_list = await asyncio.gather(*coros)
+
+    logger.info("Stacking tables...")
     stacked_table = vstack(table_list)
 
+    msg = f"Writing stacked table to {output_path}"
+    logger.info(msg)
     stacked_table.write(output_path, overwrite=overwrite)
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("input_paths", type=Path, nargs="+")
-    parser.add_argument("output_path", type=Path)
-    parser.add_argument("--overwrite", action="store_true")
+    parser.add_argument(
+        "input_filtes", 
+        type=Path, 
+        nargs="+",
+        help="List of paths to input files"
+    )
+    parser.add_argument("output_files", type=Path, help="Path to output file")
+    parser.add_argument("--overwrite", action="store_true", help="Overwrite output file if it exists")
     args = parser.parse_args()
 
-    asyncio.run(
-        vstack_tables(
-            args.input_paths,
-            args.output_path,
-            args.overwrite
-        )
-    )
+    asyncio.run(vstack_tables(args.input_filtes, args.output_files, args.overwrite))
 
 
 if __name__ == "__main__":
