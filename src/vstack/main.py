@@ -14,17 +14,16 @@ ch = logging.StreamHandler()
 logger.addHandler(ch)
 logger.setLevel(logging.INFO)
 
+
 async def read_table(input_path: Path) -> Awaitable[Table]:
     msg = f"Reading {input_path}"
     logger.info(msg)
     return Table.read(input_path)
 
-async def vstack_tables(
-        input_paths: list[Path], 
-        output_path: Path,
-        overwrite: bool = False
-) -> Awaitable[None]:
 
+async def vstack_tables(
+    input_paths: list[Path], output_path: Path, overwrite: bool = False
+) -> Awaitable[None]:
     if output_path.exists() and not overwrite:
         msg = f"{output_path} already exists. Use --overwrite to overwrite the file."
         raise FileExistsError(msg)
@@ -43,16 +42,16 @@ async def vstack_tables(
     logger.info(msg)
     stacked_table.write(output_path, overwrite=overwrite)
 
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "input_filtes", 
-        type=Path, 
-        nargs="+",
-        help="List of paths to input files"
+        "input_filtes", type=Path, nargs="+", help="List of paths to input files"
     )
     parser.add_argument("output_files", type=Path, help="Path to output file")
-    parser.add_argument("--overwrite", action="store_true", help="Overwrite output file if it exists")
+    parser.add_argument(
+        "--overwrite", action="store_true", help="Overwrite output file if it exists"
+    )
     args = parser.parse_args()
 
     asyncio.run(vstack_tables(args.input_filtes, args.output_files, args.overwrite))
