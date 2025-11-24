@@ -46,7 +46,7 @@ async def vstack_tables(
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "input_filtes", type=Path, nargs="+", help="List of paths to input files"
+        "input_files", type=Path, nargs="+", help="List of paths to input files"
     )
     parser.add_argument("output_files", type=Path, help="Path to output file")
     parser.add_argument(
